@@ -47,6 +47,7 @@ IGNORABLE_FIELDS = frozenset((
     'addselfcc',
     'groups',
 ))
+DEFAULT_BUGZILLA_URL = 'https://apibugzilla.suse.com'
 
 
 class BugzillaError(WebScraperError):
@@ -697,7 +698,7 @@ class APIBugzilla(Bugzilla):
     Wrapper class to use apibugzilla.suse.com.
     '''
 
-    def __init__(self, user, password, base='https://apibugzilla.suse.com',
+    def __init__(self, user, password, base=DEFAULT_BUGZILLA_URL,
                  useragent=None, force_readonly=False, transport='pycurl'):
         super(APIBugzilla, self).__init__(
             user, password, base, useragent, transport=transport
@@ -768,9 +769,17 @@ def get_django_bugzilla(transport='pycurl'):
         hasattr(settings, 'BUGZILLA_FORCE_READONLY') and
         settings.BUGZILLA_FORCE_READONLY
     )
+    # Check if the user changed the Bugzilla base URL
+    bugzilla_url = DEFAULT_BUGZILLA_URL
+    if (hasattr(settings, "BUGZILLA_URL") and
+            settings.BUGZILLA_URL is None and
+            len(settings.BUGZILLA_URL) == 0):
+        bugzilla_url = settings.BUGZILLA_URL
+
     bugzilla = DjangoBugzilla(
         settings.BUGZILLA_USERNAME,
         settings.BUGZILLA_PASSWORD,
+        bugzilla_url,
         useragent=settings.EMAIL_SUBJECT_PREFIX.strip('[] '),
         force_readonly=force_readonly,
         transport=transport
